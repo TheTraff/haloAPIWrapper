@@ -125,11 +125,34 @@ class HaloAPIWrapper(object):
 		gameMode(str):the deisred game mode = arena | campaign | warzone | custom
 		matchId(str):the desired match's id
 		"""
-		ednpoint = '/' + gameMode + '/matches/' + matchId
+		endpoint = '/' + gameMode + '/matches/' + matchId
 		return self.stats_request(endpoint).json()
 	
-	def get_player_match_history(self, gamerTag, modes=None,start=None,count=None):
-		"""returns data about a player's matches
+	def get_player_match_history(self, gamerTag, modes=None,start=None,count=None):	
+		"""
+		returns data about a player's recent matches
+		max count is 25
+
+		gamerTag(str):the gamertag of the player
+		modes(optional string):the game mode match history desired
+			can string mutliple game modes together with '',''
+		start(optional number):indicates how many of the most recent matches to skip
+		count(optional number):indicates how many matches to return
+		"""
+		endpoint = '/players/' + gamerTag + '/matches'
+		params = {
+			'modes':modes,
+			'start':start,
+			'count':count,
+		}
+		return self.stats_request(endpoint, params=params).json()
+	
+	def get_service_record
+
+
+
+
+
 
 		
 
@@ -137,9 +160,10 @@ class HaloAPIWrapper(object):
 
 
 halo = HaloAPIWrapper('2153dd0cd6cb4c1abf75c2e231897373')
-response = halo.get_player_csr_leaderboards("54c9ee4f-d041-44ef-bd10-2c2f71edb5a4","c98949ae-60a8-43dc-85d7-0feb0b92e719",1)
-print(response)
-			
+response = halo.get_player_match_history('TraffosaurusRex','arena',1)
+matchId = response['Results'][0]['Id']['MatchId']
+matchData = halo.get_match_events_by_id(matchId)
+print(matchData)	
 
 
 	
