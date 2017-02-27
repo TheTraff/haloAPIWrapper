@@ -118,28 +118,33 @@ class HaloAPIWrapper(object):
 		endpoint = '/matches/' + matchId + '/events'
 		return self.stats_request(endpoint).json()
 
-	def get_match_data_by_id(self, gameMode, matchId):
+	def get_match_data_by_id(self, matchId, gameMode='arena'):
 		"""
 		gets match data from a match in the given gameMode
 		
-		gameMode(str):the deisred game mode = arena | campaign | warzone | custom
+		gameMode(optional str):the deisred game mode = arena | campaign | warzone | custom
+			will default to arena if not specified -BE CAREFUL-
 		matchId(str):the desired match's id
 		"""
-		endpoint = '/' + gameMode + '/matches/' + matchId
+		if self.gameTitle == 'hw2':
+			endpoint = '/matches/' + matchId
+		else:
+			endpoint = '/' + gameMode + '/matches/' + matchId
 		return self.stats_request(endpoint).json()
 	
-	def get_player_match_history(self, gamerTag, modes=None,start=None,count=None):	
+	def get_player_match_history(self, players, modes=None,start=None,count=None):	
 		"""
 		returns data about a player's recent matches
 		max count is 25
 
-		gamerTag(str):the gamertag of the player
+		players(str):the gamertag of the player
 		modes(optional string):the game mode match history desired
 			can string mutliple game modes together with '',''
+			for hw2, this is the ''matchType'' attribute
 		start(optional number):indicates how many of the most recent matches to skip
 		count(optional number):indicates how many matches to return
 		"""
-		endpoint = '/players/' + gamerTag + '/matches'
+		endpoint = '/players/' + players + '/matches'
 		params = {
 			'modes':modes,
 			'start':start,
@@ -147,7 +152,73 @@ class HaloAPIWrapper(object):
 		}
 		return self.stats_request(endpoint, params=params).json()
 	
-	def get_service_record
+	def get_service_record(self, players, gameMode, seasonId=None):
+		"""
+		returns the service record data for the player
+		from the specified game mode, seasonId is only used for Arena
+
+		players(str):the gamertag of the player
+			can be multiple players, just seperate with '',''
+		gameMode(str):the game mode service record desired
+			Arena | Campaign | Custom | Warzone
+		seasonId(optional str): specifies the season of the returned results
+			if not specified, the current season will be returned
+		"""
+		endpoint = '/servicerecords/' + gameMode + '?players=' + players
+		params = {
+			'seasonId':seasonId,
+		}
+		return self.stats_request(endpoint, params=params).json()
+	
+	def __hw2_player_request(self, endpoint, params={}):
+		"""
+		a request for player data for hw2
+
+		endpoint(str):the desired endpoint for the player request
+		params(optional dict):optional parameters for some calls
+			currently, only match history uses this, but that is 
+			covered in the same match history function for the other games
+		"""
+		desiredEndpoint = '/players' + endpoint
+		print(desiredEndpoint)
+		return self.stats_request(desiredEndpoint, params=params)
+	
+	def get_hw2_campaign_progress(self, player):
+		"""
+		returns data about the player's campaign progress
+		specific for hw2
+
+		player(str):the player's gamertag
+		"""
+		return self.__hw2_player_request('/' + player + '/campaign-progress').json()
+	
+	def get_hw2_player_stat_summary(self, player, seasonId=None):
+		"""
+		returns data about the overall stat summary for the player
+		only one player can be specified
+		if seasonId is given, results will be of that season
+
+		player(str):the player's gamertag
+		seasonId(optional str):the optional season's Id number
+		"""
+		endpoint = '/' + player + '/stats'
+		if seasonId:
+			return self.__hw2_player_request(
+				endpoint + '/seasons/' + seasonId
+				).json()
+		else:
+			return self.__hw2_player_request(endpoint).json()
+	
+	def get_hw2_players_xp(self, players):
+		"""
+		returns xp and rank information for up to 6 players
+
+		players(str):the players' gamertags
+			up to 6 seperated by '','' in the same string
+		"""
+		return self.stats_request('/xp?players=' + players).json()
+	
+
 
 
 
@@ -159,11 +230,9 @@ class HaloAPIWrapper(object):
 
 
 
-halo = HaloAPIWrapper('2153dd0cd6cb4c1abf75c2e231897373')
-response = halo.get_player_match_history('TraffosaurusRex','arena',1)
-matchId = response['Results'][0]['Id']['MatchId']
-matchData = halo.get_match_events_by_id(matchId)
-print(matchData)	
+halo = HaloAPIWrapper('2153dd0cd6cb4c1abf75c2e231897373', 'hw2')
+response = halo.get_hw2_players_xp('TraffosaurusRex,detroitspartan')
+print(response)
 
 
 	
