@@ -3,6 +3,27 @@
 import time
 import requests
 
+class HaloAPIResult(object):
+	"""
+	A wrapper class for the dicts returned by the API
+	constructor takes: 
+	apiResult(dict):the result returned by an API call
+	"""
+	def __init__(self, apiResult):
+		self.apiResult = apiResult
+	
+	def api_result(self):
+		return self.apiResult
+	
+	def __getattr__(self, data):
+		if data in self.apiResult:
+			return self.apiResult[data]
+		elif "Results" in self.apiResult and data in self.apiResult["Results"][0]:
+			return self.apiResult["Results"][0][data]
+		else:
+			return self.apiResult
+		
+
 class HaloAPIWrapper(object):
 	"""The main class for the module
 	parameters: API key: string
@@ -63,14 +84,31 @@ class HaloAPIWrapper(object):
 		if 'Ocp-Apim-Subscription-Key' not in headers:
 			headers['Ocp-Apim-Subscription-Key'] = self.apiKey
 
-		baseUrl = 'https://www.haloapi.com/'
+		baseUrl = 'https://www.haloapi.com'
 		response = requests.get(
 			baseUrl + endpoint,
 			params=params,
 			headers=headers
 			)
 		self.allowance -= 1
-		return response
+		return response.json()
+	
+	def meta_request(self, endpoint, params={}, headers={}):
+		"""
+		base method for meta API requests
+		appends ''/metadata/{gameTitle}/metadata'' to the endpoint
+
+		endpoint(str):the desired endpoint for the result
+		params(optional dict):optional parameters for some calls
+		headers(optional dict):optional headers for some calls
+		"""
+		desiredEndpoint = '/metadata/' + self.gameTitle + '/metadata'
+		desiredEndpoint = desiredEndpoint + endpoint
+		return self.request(
+			desiredEndpoint,
+			params=params,
+			headers=headers
+			)
 	
 	def stats_request(self, endpoint, params={}, headers={}):
 		"""
@@ -81,7 +119,7 @@ class HaloAPIWrapper(object):
 		params(optional dict): optional extra parameters for some calls
 		headers(optional dict):optional headers for the call
 		"""
-		desiredEndpoint = "stats/{game}".format(game=self.gameTitle) 
+		desiredEndpoint = "/stats/{game}".format(game=self.gameTitle) 
 		desiredEndpoint = desiredEndpoint + endpoint
 
 		response = self.request(
@@ -89,8 +127,51 @@ class HaloAPIWrapper(object):
 			params=params,
 			headers=headers
 			)
-		return response
+		return HaloAPIResult(response)
 	
+	"""
+	------------------------------------------------------------------------
+	Halo 5 meta request
+	------------------------------------------------------------------------
+	"""
+
+	def get_campaign_missions(self):
+		"""
+		Returns a list of campaign missions as dicts
+		"""
+		response = self.meta_request('/campaign-missions')
+		return [HaloAPIResult(item) for item in response]
+	
+	def get_commendations(self):
+		"""
+		returns a list of halo 5 commendations
+		"""
+		response = self.meta_request('/commendations')
+		return [HaloAPIResult(item) for item in response]
+	
+	def get_csr_designations(self):
+		"""
+		returns a list of CSR designations
+		"""
+		response = self.meta_request('/csr-designations')
+		return[HaloAPIResult(item) for item in response]
+	
+	def get_enemies(self):
+		"""
+		returns a list of halo 5 enemies
+		"""
+		response = self.meta_request('/enemies')
+		return[HaloAPIResult(item) for item in response]
+
+	def get_flexible_stats(self):
+		"""
+		returns a list of halo 5 flexible stats
+		"""
+		response = self.meta_request('/flexible-stats')
+		return[HaloAPIResult(item) for item in response]
+	
+
+
 	def get_player_csr_leaderboards(self, seasonId, playlistId, count=20):
 		"""
 		gets the leaderboard of top players by CSR during
@@ -106,7 +187,7 @@ class HaloAPIWrapper(object):
 			endpoint,
 			params={'count':count}
 			)
-		return response.json()
+		return HaloAPIResult(response.json())
 	
 	def get_match_events_by_id(self, matchId):
 		"""
@@ -116,7 +197,7 @@ class HaloAPIWrapper(object):
 		"""
 
 		endpoint = '/matches/' + matchId + '/events'
-		return self.stats_request(endpoint).json()
+		return self.stats_request(endpoint)
 
 	def get_match_data_by_id(self, matchId, gameMode='arena'):
 		"""
@@ -130,7 +211,7 @@ class HaloAPIWrapper(object):
 			endpoint = '/matches/' + matchId
 		else:
 			endpoint = '/' + gameMode + '/matches/' + matchId
-		return self.stats_request(endpoint).json()
+		return self.stats_request(endpoint)
 	
 	def get_player_match_history(self, players, modes=None,start=None,count=None):	
 		"""
@@ -150,7 +231,7 @@ class HaloAPIWrapper(object):
 			'start':start,
 			'count':count,
 		}
-		return self.stats_request(endpoint, params=params).json()
+		return self.stats_request(endpoint, params=params)
 	
 	def get_service_record(self, players, gameMode, seasonId=None):
 		"""
@@ -168,7 +249,7 @@ class HaloAPIWrapper(object):
 		params = {
 			'seasonId':seasonId,
 		}
-		return self.stats_request(endpoint, params=params).json()
+		return self.stats_request(endpoint, params=params)
 	
 	def __hw2_player_request(self, endpoint, params={}):
 		"""
@@ -180,7 +261,6 @@ class HaloAPIWrapper(object):
 			covered in the same match history function for the other games
 		"""
 		desiredEndpoint = '/players' + endpoint
-		print(desiredEndpoint)
 		return self.stats_request(desiredEndpoint, params=params)
 	
 	def get_hw2_campaign_progress(self, player):
@@ -190,7 +270,7 @@ class HaloAPIWrapper(object):
 
 		player(str):the player's gamertag
 		"""
-		return self.__hw2_player_request('/' + player + '/campaign-progress').json()
+		return self.__hw2_player_request('/' + player + '/campaign-progress')
 	
 	def get_hw2_player_stat_summary(self, player, seasonId=None):
 		"""
@@ -207,7 +287,7 @@ class HaloAPIWrapper(object):
 				endpoint + '/seasons/' + seasonId
 				).json()
 		else:
-			return self.__hw2_player_request(endpoint).json()
+			return self.__hw2_player_request(endpoint)
 	
 	def get_hw2_players_xp(self, players):
 		"""
@@ -216,7 +296,7 @@ class HaloAPIWrapper(object):
 		players(str):the players' gamertags
 			up to 6 seperated by '','' in the same string
 		"""
-		return self.stats_request('/xp?players=' + players).json()
+		return self.stats_request('/xp?players=' + players)
 	
 
 
@@ -225,14 +305,3 @@ class HaloAPIWrapper(object):
 
 
 
-		
-
-
-
-
-halo = HaloAPIWrapper('2153dd0cd6cb4c1abf75c2e231897373', 'hw2')
-response = halo.get_hw2_players_xp('TraffosaurusRex,detroitspartan')
-print(response)
-
-
-	
