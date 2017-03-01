@@ -170,7 +170,11 @@ class HaloAPIWrapper(object):
 		response = self.meta_request('/flexible-stats')
 		return[HaloAPIResult(item) for item in response]
 	
-
+	"""
+	-----------------------------------------
+	Halo 5 stat request
+	----------------------------------------
+	"""
 
 	def get_player_csr_leaderboards(self, seasonId, playlistId, count=20):
 		"""
