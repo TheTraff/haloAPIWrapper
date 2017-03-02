@@ -3,6 +3,34 @@
 import time
 import requests
 
+class Error(Exception):
+	"""base class for exceptions"""
+	pass
+
+class responseError(Error):
+	"""
+	exception raised for any response code errors
+	like 404, 503, etc
+	responseCode: the code of the response error
+	"""
+	def __init__(self, responseCode):
+		self.responseCode = responseCode
+
+class serviceRecordError(Error):
+	"""
+	Exception raised for service record issues
+	gamerTag: the gamertag that caused the error
+	message: the type of error that occured
+	"""
+	def __init__(self, gamerTag, resultCode):
+		self.gamerTag = gamerTag
+		if resultCode == 1:
+			self.message = 'gamertag not found'
+		elif resultCode == 2:
+			self.message = 'service failure'
+		else:
+			aself.message = 'service unavailiable'
+
 class HaloAPIResult(object):
 	"""
 	A wrapper class for the dicts returned by the API
@@ -10,10 +38,12 @@ class HaloAPIResult(object):
 	apiResult(dict):the result returned by an API call
 	"""
 	def __init__(self, apiResult):
-		self.apiResult = apiResult
-	
+		self.apiResult = apiResult.json()
+		self.status_code = apiResult.status_code
+
 	def api_result(self):
-		return self.apiResult
+		if self.result_code == 200:
+			return self.apiResult
 	
 	def __getattr__(self, data):
 		if data in self.apiResult:
@@ -91,7 +121,10 @@ class HaloAPIWrapper(object):
 			headers=headers
 			)
 		self.allowance -= 1
-		return response.json()
+
+		if response.status_code != 200:
+			raise responseError(response.status_code)
+		return response
 	
 	def meta_request(self, endpoint, params={}, headers={}):
 		"""
@@ -237,23 +270,26 @@ class HaloAPIWrapper(object):
 		}
 		return self.stats_request(endpoint, params=params)
 	
-	def get_service_record(self, players, gameMode, seasonId=None):
+	def get_service_record(self, player, gameMode, seasonId=None):
 		"""
 		returns the service record data for the player
 		from the specified game mode, seasonId is only used for Arena
 
 		players(str):the gamertag of the player
-			can be multiple players, just seperate with '',''
 		gameMode(str):the game mode service record desired
 			Arena | Campaign | Custom | Warzone
 		seasonId(optional str): specifies the season of the returned results
 			if not specified, the current season will be returned
 		"""
-		endpoint = '/servicerecords/' + gameMode + '?players=' + players
+		endpoint = '/servicerecords/' + gameMode + '?players=' + player
 		params = {
 			'seasonId':seasonId,
 		}
-		return self.stats_request(endpoint, params=params)
+		response = self.stats_request(endpoint, params=params)
+		if response.ResultCode != 0:
+			raise serviceRecordError(player, response.ResultCode)
+		return response
+
 	
 	def __hw2_player_request(self, endpoint, params={}):
 		"""
