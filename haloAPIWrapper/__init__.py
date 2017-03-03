@@ -143,6 +143,24 @@ class HaloAPIWrapper(object):
 			headers=headers
 			)
 	
+	def profile_request(self, endpoint, params={}, headers={}):
+		"""
+		base method for profile API requests
+		appens ''/profile/{gameTitle}/profiles'' to the endpoint
+
+		endpoint(str):the desired endpoint for the result
+		params(optional dict):optional parameters for some calls
+		headers(optional dict):optional headers for some calls
+		"""
+		desiredEnpoint = '/profile/' + self.gameTitle + '/profiles'
+		desiredEnpoint = desiredEndpoint + endpoint
+		return self.request(
+			desiredEndpoint,
+			params=params,
+			headers=headers
+			)
+
+	
 	def stats_request(self, endpoint, params={}, headers={}):
 		"""
 		base method for stat request, appends ''stats/{gameTitle}/'' to the end
@@ -180,33 +198,177 @@ class HaloAPIWrapper(object):
 		returns a list of halo 5 commendations
 		"""
 		response = self.meta_request('/commendations')
-		return [HaloAPIResult(item) for item in response]
+		return HaloAPIResult(response)
+
 	
 	def get_csr_designations(self):
 		"""
 		returns a list of CSR designations
 		"""
 		response = self.meta_request('/csr-designations')
-		return[HaloAPIResult(item) for item in response]
+		return HaloAPIResult(response)
 	
 	def get_enemies(self):
 		"""
 		returns a list of halo 5 enemies
 		"""
 		response = self.meta_request('/enemies')
-		return[HaloAPIResult(item) for item in response]
+		return HaloAPIResult(response)
 
 	def get_flexible_stats(self):
 		"""
 		returns a list of halo 5 flexible stats
 		"""
 		response = self.meta_request('/flexible-stats')
-		return[HaloAPIResult(item) for item in response]
+		return HaloAPIResult(response)
+	
+	def get_game_base_variants(self):
+		"""
+		returns a list of halo 5 game base variants
+		"""
+		response = self.meta_request('/game-base-variants')
+		return HaloAPIResult(response)
+
+	def get_game_variant_by_id(self, ID):
+		"""
+		returns a list of game variants for the base variant
+		"""
+		response = self.meta_request("/game-variants/{}".format(ID))
+		return HaloAPIResult(response)
+
+	def get_impulses(self):
+		"""
+		returns a list of halo 5 impulses
+		"""
+		response = self.meta_request('/impulses')
+		return HaloAPIResult(response)
+
+	def get_map_variant_by_id(self, ID):
+		"""
+		returns info about a map with the passed ID
+		"""
+		response = self.meta_request("/map-variants/{}".format(ID))
+		return HaloAPIResult(response)
+
+	def get_maps(self):
+		"""
+		returns a list of halo 5 maps
+		"""
+		response = self.meta_request('/maps')
+		return HaloAPIResult(response)
+
+	def get_medals(self):
+		"""
+		returns a list of halo 5 medals
+		"""
+		response = self.meta_request('/medals')
+		return HaloAPIResult(response)
+	
+	"""you're almost at the end of this section. keep going!!"""
+
+	def get_playlists(self):
+		"""
+		returns a list of halo 5 playlists
+		"""
+		response = self.meta_request('/playlists')
+		return HaloAPIResult(response)
+
+	def get_requisition_by_id(self, ID):
+		"""
+		returns a halo 5 requestio with ID
+		"""
+		response = self.meta_request("/requisitions/{}".format(ID))
+		return HaloAPIResult(response)
+
+	def get_requisition_pack__by_id(self, ID):
+		"""
+		returns a halo 5 requestio with ID
+		"""
+		response = self.meta_request("/requisition-packs/{}".format(ID))
+		return HaloAPIResult(response)
+
+	def get_seasons(self):
+		"""
+		returns a list of halo 5 seasons
+		"""
+		response = self.meta_request('/seasons')
+		return HaloAPIResult(response)
+
+	def get_skulls(self):
+		"""
+		returns a list of halo 5 skulls
+		"""
+		response = self.meta_request('/skulls')
+		return HaloAPIResult(response)
+
+	def get_spartan_ranks(self):
+		"""
+		returns a list of halo 5 spartant ranks
+		"""
+		response = self.meta_request('/spartan_ranks')
+		return HaloAPIResult(response)
+
+	def get_team_colors(self):
+		"""
+		returns a list of halo 5 team colors
+		"""
+		response = self.meta_request('/team-colors')
+		return HaloAPIResult(response)
+
+	def get_vehicles(self):
+		"""
+		returns a list of halo 5 vehicles
+		"""
+		response = self.meta_request('/vehicles')
+		return HaloAPIResult(response)
+
+	def get_weapons(self):
+		"""
+		returns a list of halo 5 weapons
+		"""
+		response = self.meta_request('/weapons')
+		return HaloAPIResult(response)
 	
 	"""
 	-----------------------------------------
+	Halo 5 profile requests
+	-----------------------------------------
+	"""
+	
+	def get_player_emblem_image(self, player, size=None):
+		"""
+		returns a response object containing the player's emblem image
+		default size is 256, but must me one of:
+			95 | 128 | 190 | 256 | 512
+		player(str):the player's gamertag
+		size(optional number): the size parameter for the image
+		"""
+		return self.profile_request(
+			"/{player}/emblem".format(player=player),
+			params={"size":size}
+			)
+	
+	def get_player_spartan_image(self, player, size=None, crop=None):
+		"""
+		returns a response object containing the player's spartan image
+		default size is 256, but must me one of:
+			95 | 128 | 190 | 256 | 512
+		player(str):the player's gamertag
+		size(optional number): the size parameter for the image
+		crop(optional str): a value that specifies the crop of the image
+			must be: full | portrait
+			default is full
+		"""
+		return self.profile_request(
+			"/{player}/spartan".format(player=player),
+			params= {"size":size, "crop":crop}
+			)
+	
+
+	"""
+	-----------------------------------------
 	Halo 5 stat request
-	----------------------------------------
+	-----------------------------------------
 	"""
 
 	def get_player_csr_leaderboards(self, seasonId, playlistId, count=20):
