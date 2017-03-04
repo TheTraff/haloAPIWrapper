@@ -191,7 +191,7 @@ class HaloAPIWrapper(object):
 		Returns a list of campaign missions as dicts
 		"""
 		response = self.meta_request('/campaign-missions')
-		return [HaloAPIResult(item) for item in response]
+		return HaloAPIResult(response)
 	
 	def get_commendations(self):
 		"""
@@ -305,7 +305,7 @@ class HaloAPIWrapper(object):
 		"""
 		returns a list of halo 5 spartant ranks
 		"""
-		response = self.meta_request('/spartan_ranks')
+		response = self.meta_request('/spartan-ranks')
 		return HaloAPIResult(response)
 
 	def get_team_colors(self):
