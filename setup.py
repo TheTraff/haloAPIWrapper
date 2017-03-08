@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
 	name='haloAPIWrapper',
-	version='0.2',
+	version='0.5',
 	description='A simple API wrapper for the halo API',
 	url='https://github.com/TheTraff/haloAPIWrapper.git',
 	author='TheTraff',

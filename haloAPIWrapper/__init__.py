@@ -1,4 +1,9 @@
-"""Halo API wrapper for use with Halo 5 and future games"""
+"""
+Halo API wrapper for use with Halo 5 and future games
+	meta requests: line 185
+	profile requests: line 339
+	stat requests: line 375
+"""
 
 import time
 import requests
@@ -14,6 +19,14 @@ class responseError(Error):
 	responseCode: the code of the response error
 	"""
 	def __init__(self, responseCode):
+		if responseCode == 400:
+			self.responseCode = 'Unsupported character was entered'
+		elif responseCode == 404:
+			self.responseCode = 'Gamertag was not found'
+		elif responseCode == 500:
+			self.responseCode = 'Internal server error'
+		else:
+			self.responseCode = 'Something went wrong, please try again'
 		self.responseCode = responseCode
 
 class serviceRecordError(Error):
@@ -29,7 +42,7 @@ class serviceRecordError(Error):
 		elif resultCode == 2:
 			self.message = 'service failure'
 		else:
-			aself.message = 'service unavailiable'
+			self.message = 'service unavailiable'
 
 class HaloAPIResult(object):
 	"""
