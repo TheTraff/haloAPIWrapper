@@ -384,6 +384,17 @@ class HaloAPIWrapper(object):
 	-----------------------------------------
 	"""
 
+	"""new company api endpoints added July 14, 2017"""
+
+	def get_company(self, companyId):
+		"""
+		Retrieves information about the Company. The response will contain the Company's name, status, and members.
+		
+		companyId(str): Id of the desired company
+		"""
+		endpoint = '/companies/' + companyId + '/'
+		return self.stats_request(endpoint)
+
 	def get_player_csr_leaderboards(self, seasonId, playlistId, count=20):
 		"""
 		gets the leaderboard of top players by CSR during
